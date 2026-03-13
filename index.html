@@ -167,7 +167,6 @@ declare namespace neopixel {
 }
 `;
 
-        const API_KEY = "AIzaSyD9ZdpufzUgqnG2AsWQ-GP9qDsJWOIGYEs"; 
         const MODELS = [
             "gemini-2.5-flash",
             "gemini-1.5-flash", 
@@ -175,10 +174,12 @@ declare namespace neopixel {
         ];
 
         const App = () => {
+            const [apiKey, setApiKey] = useState('');
+            const [showSettings, setShowSettings] = useState(false);
             const [messages, setMessages] = useState([
                 { 
                     role: 'assistant', 
-                    text: '안녕하세요! 바운더리엑스 바이브코딩 스튜디오에 오신 것을 환영합니다.\n무엇을 코딩해 드릴까요? (예: "전진하다가 빨간색을 보면 멈춰줘")\n\n💡 팁: 입력창의 [🪄 지팡이] 버튼을 누르면 제가 프롬프트를 더 똑똑하게 다듬어 드려요!' 
+                    text: '안녕하세요! 바운더리엑스 바이브코딩 스튜디오에 오신 것을 환영합니다.\n무엇을 코딩해 드릴까요? (예: "전진하다가 빨간색을 보면 멈춰줘")\n\n💡 팁: 시작 전 우측 상단의 ⚙️(설정) 버튼을 눌러 선생님이 주신 API 키를 입력해주세요!' 
                 }
             ]);
             
@@ -204,13 +205,11 @@ declare namespace neopixel {
 
             // --- AI Logic ---
             const callGemini = async (prompt, systemInstruction) => {
-                if (!API_KEY) throw new Error("API 키가 구성되지 않았습니다.");
-
                 let lastError = null;
 
                 for (const model of MODELS) {
                     try {
-                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`, {
+                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -235,11 +234,18 @@ declare namespace neopixel {
                     }
                 }
                 
-                throw new Error("지원되는 AI 모델을 찾을 수 없습니다. API 키의 권한을 확인해주세요.\n최종 에러: " + lastError?.message);
+                throw new Error("지원되는 AI 모델을 찾을 수 없습니다. API 키가 정확한지 확인해주세요.\n최종 에러: " + lastError?.message);
             };
 
             const generateCode = async () => {
                 if (!input.trim()) return;
+
+                if (!apiKey) {
+                    setMessages(prev => [...prev, { role: 'user', text: input }, { role: 'system', text: '⚠️ API 키가 입력되지 않았습니다. 우측 상단의 ⚙️(설정) 버튼을 눌러 API 키를 먼저 입력해주세요.' }]);
+                    setInput('');
+                    setShowSettings(true);
+                    return;
+                }
                 
                 const userQuery = input;
                 setInput('');
@@ -293,6 +299,11 @@ RULES:
             };
 
             const handleSuggestIdea = async () => {
+                if (!apiKey) {
+                    setMessages(prev => [...prev, { role: 'system', text: '⚠️ API 키가 입력되지 않았습니다. 설정에서 API 키를 입력해주세요.' }]);
+                    setShowSettings(true);
+                    return;
+                }
                 setIsThinkingIdea(true);
                 try {
                     const systemPrompt = "You are a creative robot instructor. Suggest ONE fun, educational, and specific mission for a student using a Micro:bit AI robot car (Ponybot). Example output: '박수를 두 번 치면 회전하고, 장애물을 만나면 멈추는 코드를 짜줘.' Return ONLY the suggested command in Korean.";
@@ -307,7 +318,11 @@ RULES:
 
             const handleRefinePrompt = async () => {
                 if (!input.trim()) return;
-
+                if (!apiKey) {
+                    setMessages(prev => [...prev, { role: 'system', text: '⚠️ API 키가 입력되지 않았습니다. 설정에서 API 키를 입력해주세요.' }]);
+                    setShowSettings(true);
+                    return;
+                }
                 setIsRefining(true);
                 try {
                     const systemPrompt = "You are an expert prompt engineer for educational robots. Reword the user's simple command into a precise, logic-based instruction for a Micro:bit robot. Include specific details like duration, speed, sensor conditions, and visual feedback (LEDs). Keep it natural, polite, and in Korean. The output should be ready to use as a better prompt. Do NOT generate code, just the refined text prompt. Ensure suggested actions are possible within the aiPonybot and neopixel capabilities.";
@@ -322,6 +337,11 @@ RULES:
 
             const handleExplainCode = async () => {
                 if (generatedCode.startsWith('//') && generatedCode.length < 100) return;
+                if (!apiKey) {
+                    setMessages(prev => [...prev, { role: 'system', text: '⚠️ API 키가 입력되지 않았습니다. 설정에서 API 키를 입력해주세요.' }]);
+                    setShowSettings(true);
+                    return;
+                }
 
                 setIsExplaining(true);
                 setShowExplanation(true);
@@ -361,8 +381,8 @@ RULES:
             };
 
             return (
-                <div className="flex flex-col h-screen w-full bg-white text-[#111] overflow-hidden">
-                    <header className="flex justify-between items-center bg-black border-b border-[#333] px-6 py-3.5 shrink-0 z-50 shadow-md">
+                <div className="flex flex-col h-screen w-full bg-white text-[#111] overflow-hidden relative">
+                    <header className="flex justify-between items-center bg-black border-b border-[#333] px-6 py-3.5 shrink-0 z-50 shadow-md relative">
                         <div className="flex items-center gap-3">
                             <a href="https://boundaryx.io" target="_blank" rel="noreferrer" className="flex items-center transition-opacity hover:opacity-80">
                                 <img src="https://raw.githubusercontent.com/boundary-x/ai_voice_recognition/refs/heads/main/boundaryx_logo.png" alt="Boundary X Logo" className="h-6 w-auto" />
@@ -371,11 +391,43 @@ RULES:
                             <span className="text-white text-lg font-bold tracking-tight">바이브코딩 스튜디오</span>
                         </div>
                         <div className="flex items-center gap-4">
+                            <button 
+                                onClick={() => setShowSettings(!showSettings)} 
+                                className="text-[#999] hover:text-white transition-colors" 
+                                title="API 키 설정"
+                            >
+                                <i className="fa-solid fa-gear text-lg"></i>
+                            </button>
                             <a href="https://boundaryx.io/shop/?idx=26" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-white border border-white px-4 py-1.5 rounded-full text-xs font-bold hover:bg-white hover:text-black transition-all">
                                 <span>제품 정보</span>
                                 <i className="fa-solid fa-arrow-up-right-from-square"></i>
                             </a>
                         </div>
+                        
+                        {/* API 설정 모달 */}
+                        {showSettings && (
+                            <div className="absolute top-16 right-6 p-5 bg-white rounded-2xl shadow-2xl border border-[#D1D5DB] z-[100] w-80 animate-fade-in text-[#111]">
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="text-sm font-bold"><i className="fa-solid fa-key text-[#EA4335] mr-2"></i>API 키 설정</h3>
+                                    <button onClick={() => setShowSettings(false)} className="text-[#999] hover:text-black transition-colors">
+                                        <i className="fa-solid fa-xmark text-lg"></i>
+                                    </button>
+                                </div>
+                                <p className="text-xs text-[#666] mb-4">선생님께 안내받은 Google Gemini API Key를 입력하세요. 코드는 내 컴퓨터에서만 안전하게 실행됩니다.</p>
+                                <input 
+                                    type="password" 
+                                    placeholder="API 키 입력 (sk-... 또는 AIza...)" 
+                                    value={apiKey}
+                                    onChange={(e) => setApiKey(e.target.value)}
+                                    className="w-full bg-[#F8F9FA] border border-[#D1D5DB] rounded-lg p-2.5 text-sm text-[#111] mb-4 focus:ring-1 focus:ring-black focus:border-black outline-none"
+                                />
+                                <div className="flex justify-end">
+                                    <button onClick={() => setShowSettings(false)} className="px-4 py-2 bg-black text-white text-xs font-bold rounded-lg hover:bg-[#333] w-full transition-colors">
+                                        확인 및 닫기
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </header>
 
                     <main className="flex flex-1 overflow-hidden relative bg-[#F8F9FA]">
