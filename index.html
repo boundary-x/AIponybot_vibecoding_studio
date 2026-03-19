@@ -266,6 +266,7 @@ RULES:
 2. **NEOPIXEL USAGE:** - [CRITICAL] ONLY IF NeoPixels are needed, you MUST declare the strip variable at the top level: \`let strip: neopixel.Strip = null;\`
    - Initialize it ONCE at the top level (outside of loops): \`strip = neopixel.create(DigitalPin.P8, 4, NeoPixelMode.RGB)\`
    - Notice that \`NeoPixelMode\` and \`NeoPixelColors\` are GLOBAL enums, do NOT prefix them with \`neopixel.\` when passing them as arguments.
+   - [🚨 CRITICAL COLOR OVERRIDE] You MUST use \`neopixel.getColors(NeoPixelColors.Red)\` to get a color value. NEVER use \`neopixel.colors(...)\`. Example: \`strip.showColor(neopixel.getColors(NeoPixelColors.Red))\`
 3. **BLOCK CONVERSION RULE (CRITICAL FOR MAKECODE):**
    - MakeCode block editor fails to convert 'let' inside loops.
    - You MUST declare variables globally at the top of the code.
