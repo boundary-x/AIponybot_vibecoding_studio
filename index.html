@@ -5,17 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Ponybot Vibe Coding Studio</title>
     
-    <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     
-    <!-- Babel for in-browser JSX compilation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -259,10 +255,6 @@ Your ONLY goal is to write complete, runnable code for the BBC Micro:bit based o
 [🚨 ZERO HALLUCINATION POLICY 🚨]
 You are STRICTLY FORBIDDEN from inventing any functions, methods, enums, or properties.
 If a function is not explicitly listed in the declaration below, IT DOES NOT EXIST.
-For example:
-- DO NOT use 'aiPonybot.moveForward()'. Use 'aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 255)'.
-- DO NOT use 'aiPonybot.stop()'. Use 'aiPonybot.stopAllMotors()'.
-- DO NOT use 'neopixel.showColor(red)'. Use 'strip.showColor(neopixel.getColors(NeoPixelColors.Red))' or similar.
 
 [EXACT LIBRARY DECLARATIONS]
 \`\`\`typescript
@@ -271,18 +263,29 @@ ${EXTENSION_SOURCE}
 
 RULES:
 1. **STRICT COMPLIANCE:** Use ONLY the functions defined above. 
-2. **NEOPIXEL USAGE:** - You MUST declare the strip variable at the top level: \`let strip: neopixel.Strip = null;\`
+2. **NEOPIXEL USAGE:** - [CRITICAL] ONLY IF NeoPixels are needed, you MUST declare the strip variable at the top level: \`let strip: neopixel.Strip = null;\`
    - Initialize it ONCE at the top level (outside of loops): \`strip = neopixel.create(DigitalPin.P8, 4, NeoPixelMode.RGB)\`
    - Notice that \`NeoPixelMode\` and \`NeoPixelColors\` are GLOBAL enums, do NOT prefix them with \`neopixel.\` when passing them as arguments.
 3. **BLOCK CONVERSION RULE (CRITICAL FOR MAKECODE):**
    - MakeCode block editor fails to convert 'let' inside loops.
-   - You MUST declare ALL variables globally at the top of the code (e.g., \`let distance = 0;\`).
-   - Inside \`basic.forever\`, ONLY assign values (e.g., \`distance = aiPonybot.ping(aiPonybot.PingUnit.Centimeters);\`).
+   - You MUST declare variables globally at the top of the code.
+   - [🚨 CRITICAL WARNING] ONLY DECLARE VARIABLES THAT ARE ACTUALLY USED IN YOUR LOGIC. DO NOT DECLARE ANY UNUSED VARIABLES.
+   - Inside \`basic.forever\`, ONLY assign values.
    - **IMPORTANT:** Do NOT provide the second parameter (\`maxCmDistance\`) when calling \`aiPonybot.ping\`.
-4. **STARTUP / TOP-LEVEL CODE:** - Do NOT use \`basic.onStart()\`. In MakeCode, code written at the top-level (outside of any handlers or \`basic.forever\`) acts as the "on start" block.
-   - Place all initialization code (like setting up NeoPixel) and \`basic.showIcon(IconNames.Happy)\` directly at the top level of the file.
+4. **STARTUP / TOP-LEVEL CODE:** - Do NOT use \`basic.onStart()\`. In MakeCode, code written at the top-level acts as the "on start" block.
+   - Place all initialization code directly at the top level of the file.
 5. **OUTPUT FORMAT:** Return ONLY the raw code. Do NOT use markdown code blocks (no \`\`\`typescript). Do NOT explain the code here.
-6. **OLED DISPLAY COLOR:** When using display functions (e.g., \`aiPonybot.showString\`, \`aiPonybot.showNumber\`), ALWAYS set the color parameter to \`1\` (ON) so the text is visible. (e.g., \`aiPonybot.showString("Distance:", 0, 0, 1)\`).
+6. **OLED DISPLAY COLOR:** When using display functions ALWAYS set the color parameter to \`1\` (ON) so the text is visible.
+7. **LED MATRIX vs NEOPIXEL (CRITICAL DISTINCTION):**
+   - If the user simply asks for "LED", "아이콘", "하트", you MUST use the Micro:bit's built-in 5x5 LED matrix (e.g., \`basic.showIcon(...)\`, \`basic.showLeds(...)\`, \`basic.clearScreen()\`). Do NOT use neopixel for this.
+   - If the user EXPLICITLY asks for "포니봇 LED", "네오픽셀", or "포니봇 라이트", ONLY THEN use the \`neopixel\` extension (e.g., \`strip.showColor(...)\`).
+8. **EVENT HANDLERS:** - NEVER place event handlers (like \`input.onButtonPressed\`, \`input.onGesture\`) inside \`basic.forever\` or any other loops. They MUST be declared independently at the top-level.
+9. **LOOP YIELDING:** - If you use a \`while\` loop, you MUST include \`basic.pause(20)\` inside the loop body to prevent freezing.
+10. **TYPE CONSISTENCY:** - MakeCode is statically typed. Never change a variable's data type after initialization.
+11. **[🚨 GUARDRAIL] PRIVACY PROTECTION:** If the user prompt contains ANY personal information (names, phone numbers, addresses, school names, passwords, etc.) or asks to process such data, you MUST NOT generate any code. Instead, return EXACTLY this string and nothing else:
+// ⚠️ 바이브코딩 스튜디오는 개인정보를 수집하지 않으며, 관련 답변을 할 수 없어요
+12. **[🚨 GUARDRAIL] OFF-TOPIC PREVENTION:** If the user prompt is conversational chit-chat, jokes, general knowledge questions, or ANYTHING not directly related to programming the AI Ponybot or Micro:bit, you MUST NOT generate any code. Instead, return EXACTLY this string and nothing else:
+// ⚠️ 수업과 관련된 바이브코딩 프롬프트를 넣어주세요.
 `;
 
                 try {
@@ -325,7 +328,7 @@ RULES:
                 }
                 setIsRefining(true);
                 try {
-                    const systemPrompt = "You are an expert prompt engineer for educational robots. Reword the user's simple command into a precise, logic-based instruction for a Micro:bit robot. Include specific details like duration, speed, sensor conditions, and visual feedback (LEDs). Keep it natural, polite, and in Korean. The output should be ready to use as a better prompt. Do NOT generate code, just the refined text prompt. Ensure suggested actions are possible within the aiPonybot and neopixel capabilities.";
+                    const systemPrompt = "You are an expert prompt engineer for educational robots. Reword the user's simple command into a precise, logic-based instruction for a Micro:bit robot. Include specific details like duration, speed, sensor conditions, visual feedback (LEDs vs NeoPixels). Keep it natural, polite, and in Korean. The output should be ready to use as a better prompt. Do NOT generate code, just the refined text prompt. Ensure suggested actions are possible within the aiPonybot and neopixel capabilities.";
                     const refined = await callGemini(input, systemPrompt);
                     setInput(refined.trim());
                 } catch (error) {
