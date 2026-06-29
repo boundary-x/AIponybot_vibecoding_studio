@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Vibe Coding Studio</title>
+    <link rel="icon" href="https://raw.githubusercontent.com/boundary-x/ai_teachable_machine/refs/heads/main/Favicon.png"/>
     
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+    <script src="https://unpkg.com/@babel/standalone@7.24.4/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -33,49 +31,24 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
         
-        .bx-pill-btn {
-            transition: all 0.2s;
-            border-radius: 50px; 
-            font-weight: 600;
-        }
-        .bx-btn-black {
-            background-color: #000;
-            color: #fff;
-        }
-        .bx-btn-black:hover {
-            background-color: #333;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .bx-btn-outline {
-            background-color: #fff;
-            color: #111;
-            border: 1px solid #D1D5DB;
-        }
-        .bx-btn-outline:hover {
-            background-color: #F8F9FA;
-            border-color: #000;
-        }
-        .bx-btn-danger-outline {
-            background-color: #fff;
-            color: #EA4335;
-            border: 1px solid #D1D5DB;
-        }
-        .bx-btn-danger-outline:hover {
-            background-color: #FFF5F5;
-            border-color: #EA4335;
-        }
+        .bx-pill-btn { transition: all 0.2s; border-radius: 50px; font-weight: 600; }
+        .bx-btn-black { background-color: #000; color: #fff; }
+        .bx-btn-black:hover { background-color: #333; transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .bx-btn-outline { background-color: #fff; color: #111; border: 1px solid #D1D5DB; }
+        .bx-btn-outline:hover { background-color: #F8F9FA; border-color: #000; }
+        .bx-btn-danger-outline { background-color: #fff; color: #EA4335; border: 1px solid #D1D5DB; }
+        .bx-btn-danger-outline:hover { background-color: #FFF5F5; border-color: #EA4335; }
         ::selection { background: #000; color: #fff; }
     </style>
 </head>
 <body class="overflow-hidden">
     <div id="root"></div>
 
-    <script type="text/babel">
+    <script type="text/babel" data-presets="react,env">
         const { useState, useEffect, useRef } = React;
 
         // =========================================================================
-        // 1. AI 포니봇 확장블록 정의 (OLED 및 컬러센서 초기화 복구 완료)
+        // 1. AI 포니봇 확장블록 정의
         // =========================================================================
         const PONYBOT_EXTENSION = `
 declare enum DigitalPin { P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16 }
@@ -116,6 +89,17 @@ declare namespace aiPonybot {
     function isColorAdvanced(color: DetectedColor, threshold?: number): boolean;
     function isColorInRange(minR: number, maxR: number, minG: number, maxG: number, minB: number, maxB: number): boolean;
     
+    enum UARTDataType { X, Y, W, H, D }
+    enum ColorDataType { R, G, B, I }
+    enum ReturnFormat { String, Number }
+    function parseUARTUnified(data: string, type: UARTDataType, format: ReturnFormat): any;
+    function parseColorUnified(data: string, color: ColorDataType, format: ReturnFormat): any;
+    
+    enum FaceDataType { X, Y, Z, Yaw, Pitch, Mouth, LeftEye, RightEye, Roll, Smile, Visible }
+    enum HandDataType { LeftDir, LeftSpeed, RightDir, RightSpeed }
+    function parseFaceUnified(data: string, type: FaceDataType): number;
+    function parseHandPoseUnified(data: string, type: HandDataType, format: ReturnFormat): any;
+    
     enum Display { On = 1, Off = 0 }
     function invert(on?: boolean): void;
     function clear(): void;
@@ -128,23 +112,13 @@ declare namespace aiPonybot {
     function horizontalLine(x: number, y: number, length: number, color?: number): void;
     function verticalLine(x: number, y: number, length: number, color?: number): void;
     function rectangle(x1: number, y1: number, x2: number, y2: number, color?: number): void;
-
-    enum UARTDataType { X, Y, W, H, D }
-    enum ColorDataType { R, G, B, I }
-    enum ReturnFormat { String, Number }
-    function parseUARTUnified(data: string, type: UARTDataType, format: ReturnFormat): any;
-    function parseColorUnified(data: string, color: ColorDataType, format: ReturnFormat): any;
-    
-    enum FaceDataType { X, Y, Z, Yaw, Pitch, Mouth, LeftEye, RightEye, Roll, Smile, Visible }
-    enum HandDataType { LeftDir, LeftSpeed, RightDir, RightSpeed }
-    function parseFaceUnified(data: string, type: FaceDataType): number;
-    function parseHandPoseUnified(data: string, type: HandDataType, format: ReturnFormat): any;
 }
 
+declare enum NeoPixelColors { Red = 0xFF0000, Orange = 0xFFA500, Yellow = 0xFFFF00, Green = 0x00FF00, Blue = 0x0000FF, Indigo = 0x000080, Violet = 0x8a2be2, White = 0xFFFFFF, Black = 0x000000 }
+declare enum NeoPixelMode { RGB = 1, RGBW = 2, RGB_RGB = 3 }
+declare enum HueInterpolationDirection { Clockwise, CounterClockwise, Shortest }
+
 declare namespace neopixel {
-    enum NeoPixelColors { Red = 0xFF0000, Orange = 0xFFA500, Yellow = 0xFFFF00, Green = 0x00FF00, Blue = 0x0000FF, Indigo = 0x000080, Violet = 0x8a2be2, White = 0xFFFFFF, Black = 0x000000 }
-    enum NeoPixelMode { RGB = 1, RGBW = 2, RGB_RGB = 3 }
-    enum HueInterpolationDirection { Clockwise, CounterClockwise, Shortest }
     class Strip {
         showColor(rgb: number): void;
         showRainbow(startHue?: number, endHue?: number): void;
@@ -166,16 +140,41 @@ declare namespace neopixel {
 `;
 
         // =========================================================================
-        // 2. 바이브램프 확장블록 정의 (Hue 방향 속성 복구 완료)
+        // 2. 바이브램프 확장블록 정의 (최신)
         // =========================================================================
         const VIBELAMP_EXTENSION = `
 declare enum DigitalPin { P0, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16 }
-declare enum NeoPixelColors { Red = 0xFF0000, Orange = 0xFFA500, Yellow = 0xFFFF00, Green = 0x00FF00, Blue = 0x0000FF, Indigo = 0x000080, Violet = 0x8a2be2, White = 0xFFFFFF, Black = 0x000000 }
-declare enum NeoPixelMode { RGB = 1, RGBW = 2, RGB_RGB = 3 }
+declare enum NeoPixelColors {
+    Red = 0xFF0000,
+    Orange = 0xFFA500,
+    Yellow = 0xFFFF00,
+    Green = 0x00FF00,
+    Blue = 0x0000FF,
+    Indigo = 0x000080,
+    Violet = 0x8a2be2,
+    White = 0xFFFFFF,
+    Black = 0x000000
+}
+
+declare enum NeoPixelMode {
+    RGB = 1,
+    RGBW = 2,
+    RGB_RGB = 3
+}
 
 declare namespace vibeLamp {
-    enum HueInterpolationDirection { Clockwise, CounterClockwise, Shortest }
     class Strip {
+        buffer: Buffer;
+        pin: DigitalPin;
+        brightness: number;
+        start: number;
+        _length: number;
+        mode: NeoPixelMode;
+        matrixWidth: number;
+        matrixChain: number;
+        matrixRotation: number;
+        _isShowing: boolean;
+
         showColor(rgb: number): void;
         clear(): void;
         setBrightness(brightness: number): void;
@@ -191,6 +190,7 @@ declare namespace vibeLamp {
         setMatrixColor(x: number, y: number, rgb: number): void;
         setPin(pin: DigitalPin): void;
     }
+
     function create(pin: DigitalPin, numLeds: number, mode: NeoPixelMode): Strip;
     function rgb(red: number, green: number, blue: number): number;
     function pickColor(color: number): number;
@@ -209,6 +209,7 @@ declare namespace vibeLamp {
     function parseHandPoseUnified(data: string, type: HandDataType, format: ReturnFormat): any;
 
     enum Display { On = 1, Off = 0 }
+    
     function invert(on?: boolean): void;
     function clear(): void;
     function display(on: boolean): void;
@@ -224,24 +225,21 @@ declare namespace vibeLamp {
 `;
 
         const MODELS = [
-            "gemini-2.5-flash",
-            "gemini-1.5-flash", 
-            "gemini-pro"
+            "gemini-3.5-flash",
+            "gemini-3.1-flash-lite",
+            "gemini-2.5-flash"
         ];
 
         const App = () => {
             const [apiKey, setApiKey] = useState('');
             const [showSettings, setShowSettings] = useState(false);
             
-            // 제품 상태 (ponybot / vibelamp)
             const [product, setProduct] = useState('ponybot');
-            
-            // 프롬프트 모드 상태 (new / improve / fix)
             const [promptMode, setPromptMode] = useState('new');
 
             const [messages, setMessages] = useState([]);
             const [input, setInput] = useState('');
-            const [generatedCode, setGeneratedCode] = useState('// 여기에 AI가 생성한 코드가 나타납니다.');
+            const [generatedCode, setGeneratedCode] = useState('// 여기에 AI가 생성한 코드가 나타납니다.\n// 생성된 코드를 복사해서 MakeCode에 붙여넣으세요!');
             const [isLoading, setIsLoading] = useState(false);
             const [copySuccess, setCopySuccess] = useState(false);
             
@@ -249,20 +247,23 @@ declare namespace vibeLamp {
             const [explanationText, setExplanationText] = useState('');
             const [isExplaining, setIsExplaining] = useState(false);
 
+            // 이미지 업로드 및 붙여넣기 상태
+            const [pastedImage, setPastedImage] = useState(null);
+
             const messagesEndRef = useRef(null);
 
-            // 초기 인사말 설정 (제품 전환 시 변경)
             useEffect(() => {
                 const productName = product === 'ponybot' ? 'AI 포니봇' : '바이브램프';
                 setMessages([
                     { 
                         role: 'assistant', 
-                        text: `안녕하세요! ${productName} 바이브코딩 스튜디오에 오신 것을 환영합니다.\n무엇을 코딩해 드릴까요?\n\n💡 팁: 시작 전 우측 상단의 ⚙️(설정) 버튼을 눌러 선생님이 주신 API 키를 입력해주세요!` 
+                        text: `안녕하세요! ${productName} 바이브코딩 스튜디오에 오신 것을 환영합니다.\n무엇을 코딩해 드릴까요?\n\n💡 팁: 시작 전 우측 상단의 ⚙️(설정) 버튼을 눌러 API 키를 입력해주세요!\n💡 에러 화면이나 블록을 캡처해서 프롬프트 창에 붙여넣기(Ctrl+V) 할 수 있어요.` 
                     }
                 ]);
-                setGeneratedCode('// 여기에 AI가 생성한 코드가 나타납니다.');
+                setGeneratedCode('// 여기에 AI가 생성한 코드가 나타납니다.\n// 생성된 코드를 복사해서 MakeCode에 붙여넣으세요!');
                 setPromptMode('new');
                 setInput('');
+                setPastedImage(null);
             }, [product]);
 
             const scrollToBottom = () => {
@@ -270,24 +271,47 @@ declare namespace vibeLamp {
             };
             useEffect(scrollToBottom, [messages]);
 
-            // Placeholder 동적 설정
             const getPlaceholder = () => {
-                if (promptMode === 'new') return "새로운 코드를 어떻게 짤지 설명하세요...";
-                if (promptMode === 'improve') return "현재 코드를 어떻게 발전시키고 싶나요? (예: 후진 기능 추가해줘)";
-                if (promptMode === 'fix') return "어떤 문제가 발생했나요? (예: A버튼을 눌러도 불이 안 켜져)";
+                if (promptMode === 'new') return "새로운 코드를 어떻게 짤지 설명하세요... (이미지 붙여넣기 Ctrl+V 가능)";
+                if (promptMode === 'improve') return "현재 코드를 어떻게 발전시키고 싶나요?... (이미지 붙여넣기 Ctrl+V 가능)";
+                if (promptMode === 'fix') return "어떤 문제가 발생했나요? 에러 화면을 캡처해서 붙여넣어 보세요 (Ctrl+V)";
                 return "";
             };
 
+            // 이미지 붙여넣기 핸들러
+            const handlePaste = (e) => {
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf("image") === 0) {
+                        e.preventDefault();
+                        const blob = items[i].getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = (event) => setPastedImage(event.target.result);
+                        reader.readAsDataURL(blob);
+                    }
+                }
+            };
+
             // --- AI Logic ---
-            const callGemini = async (prompt, systemInstruction) => {
+            const callGemini = async (prompt, systemInstruction, imageBase64 = null) => {
                 let lastError = null;
                 for (const model of MODELS) {
                     try {
+                        let parts = [{ text: prompt }];
+                        
+                        if (imageBase64) {
+                            const mimeType = imageBase64.split(';')[0].split(':')[1];
+                            const data = imageBase64.split(',')[1];
+                            parts.push({
+                                inlineData: { mimeType: mimeType, data: data }
+                            });
+                        }
+
                         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                contents: [{ parts: [{ text: prompt }] }],
+                                contents: [{ parts: parts }],
                                 systemInstruction: { parts: [{ text: systemInstruction }] },
                                 generationConfig: { temperature: 0.1 } 
                             })
@@ -309,53 +333,64 @@ declare namespace vibeLamp {
             };
 
             const generateCode = async () => {
-                if (!input.trim()) return;
+                if (!input.trim() && !pastedImage) return;
 
                 if (!apiKey) {
-                    setMessages(prev => [...prev, { role: 'user', text: input }, { role: 'system', text: '⚠️ API 키가 입력되지 않았습니다. 우측 상단의 ⚙️(설정) 버튼을 눌러 API 키를 먼저 입력해주세요.' }]);
+                    setMessages(prev => [...prev, { role: 'user', text: input, image: pastedImage }, { role: 'system', text: '⚠️ API 키가 입력되지 않았습니다. 우측 상단의 ⚙️(설정) 버튼을 눌러 API 키를 먼저 입력해주세요.' }]);
                     setInput('');
+                    setPastedImage(null);
                     setShowSettings(true);
                     return;
                 }
                 
-                const userQuery = input;
+                const userQuery = input.trim() || "이 이미지를 참고해서 내 요청을 해결하거나 코드를 짜줘.";
                 setInput('');
+                
+                const currentImage = pastedImage;
+                setPastedImage(null);
                 
                 let modeLabel = "";
                 if (promptMode === 'improve') modeLabel = "[코드 개선] ";
                 if (promptMode === 'fix') modeLabel = "[에러 해결] ";
-                setMessages(prev => [...prev, { role: 'user', text: modeLabel + userQuery }]);
+                
+                setMessages(prev => [...prev, { role: 'user', text: modeLabel + userQuery, image: currentImage }]);
                 setIsLoading(true);
 
                 // ================== 동적 시스템 프롬프트 조립 ==================
                 const isPonybot = product === 'ponybot';
                 
-                // 1. 선언부
                 const extensionSrc = isPonybot ? PONYBOT_EXTENSION : VIBELAMP_EXTENSION;
                 const robotName = isPonybot ? "AI Ponybot" : "Vibe Lamp";
                 
-                // 2. 라이트 초기화 코드
                 const initRule = isPonybot 
-                    ? `\`let strip: neopixel.Strip = null;\`\n   - Initialize it ONCE at the top level: \`strip = neopixel.create(DigitalPin.P8, 4, NeoPixelMode.RGB)\``
-                    : `\`let strip: vibeLamp.Strip = null;\`\n   - Initialize it ONCE at the top level: \`strip = vibeLamp.create(DigitalPin.P8, 12, NeoPixelMode.RGB)\``;
+                    ? `- [🚨 CRITICAL] Initialize it ONCE at the top level exactly like this: \`let strip = neopixel.create(DigitalPin.P8, 4, NeoPixelMode.RGB)\``
+                    : `- [🚨 CRITICAL] Initialize it ONCE at the top level exactly like this: \`let strip = vibeLamp.create(DigitalPin.P8, 12, NeoPixelMode.RGB)\``;
                 
-                // 3. 색상 강제 규칙
                 const colorRule = isPonybot
                     ? `- [🚨 CRITICAL COLOR OVERRIDE] You MUST use \`neopixel.getColors(NeoPixelColors.Red)\` to get a color value. NEVER use \`neopixel.colors(...)\`. Example: \`strip.showColor(neopixel.getColors(NeoPixelColors.Red))\``
                     : `- [🚨 CRITICAL COLOR OVERRIDE] You MUST use \`vibeLamp.colors(NeoPixelColors.Red)\` to get a color value. NEVER use \`vibeLamp.getColors(...)\`. Example: \`strip.showColor(vibeLamp.colors(NeoPixelColors.Red))\``;
 
-                // 4. OLED 및 매트릭스 LED 규칙
                 const matrixRule = isPonybot
                     ? `- If the user asks to display basic shapes like "LED", "아이콘", "하트", use the Micro:bit's built-in 5x5 LED matrix (e.g., \`basic.showIcon(...)\`).\n   - If the user asks for "포니봇 LED", "네오픽셀", use the \`neopixel\` extension.\n   - If the user asks for "OLED", "화면", "디스플레이", "글자 출력", you MUST use \`aiPonybot.showString(...)\` or \`aiPonybot.showNumber(...)\`.`
                     : `- If the user asks for "화면", "디스플레이", "글자 출력", you MUST use \`vibeLamp.showString(...)\` or \`vibeLamp.showNumber(...)\`.\n   - If the user asks for "라이트", "네오픽셀", you MUST use \`strip.showColor(...)\` or \`strip.showRainbow(...)\`.`;
+
+                const memoryRule = isPonybot
+                    ? `11. **DATA TYPE & PARSING:**\n    - MakeCode is statically typed. Never change a variable's data type after initialization.\n    - When handling UART or serial communication data (e.g., \`parseUARTUnified\`), always ensure to check if the string is not empty before parsing.`
+                    : `11. **[🚨 CRITICAL] HARDWARE MEMORY & 070 ERROR PREVENTION (VIBE LAMP ONLY):**
+    - [🚨 3-COMBO BAN] You are STRICTLY FORBIDDEN from using NeoPixel, Bluetooth, and OLED display functions all together in the same program. Using all three causes a 070 memory crash. You may use (NeoPixel + Bluetooth) OR (OLED + Bluetooth), but NEVER all three. If the user explicitly asks to use all three, DO NOT write the code. Instead, return EXACTLY this string and nothing else:
+// ⚠️ 마이크로비트 메모리 한계(070 에러)로 인해 네오픽셀, 블루투스, OLED를 동시에 사용할 수 없어요. 두 가지만 선택해주세요.
+    - [BT + NEOPIXEL INIT] If using BOTH Bluetooth (\`bluetooth\`) and NeoPixels, you MUST initialize them at the top level in this EXACT order: 1) \`bluetooth.startUartService()\`, 2) \`basic.pause(500)\`, 3) Initialize the strip.
+    - [NO MUSIC ALLOWED] If Bluetooth (\`bluetooth\`) is used, you are STRICTLY FORBIDDEN from using any functions from the \`music\` namespace.
+    - [UART EVENT DEFERRAL] NEVER call OLED or NeoPixel drawing functions directly inside \`bluetooth.onUartDataReceived\`. Parse and save data to global variables, and draw inside \`basic.forever\`.
+    - [DATA PARSING] When handling UART data, always check if the string is not empty before parsing.`;
 
                 const systemPrompt = `
 You are an expert MakeCode JavaScript/TypeScript programmer for the "${robotName}" based on BBC Micro:bit V2.
 Your ONLY goal is to write complete, runnable code for the BBC Micro:bit V2 based on the user's request.
 
 [🚨 ZERO HALLUCINATION POLICY 🚨]
-You are STRICTLY FORBIDDEN from inventing any functions, methods, enums, or properties.
-If a function is not explicitly listed in the declaration below, IT DOES NOT EXIST.
+You are STRICTLY FORBIDDEN from inventing any functions, methods, enums, or properties for custom extensions.
+If a custom extension function is not explicitly listed in the declaration below, IT DOES NOT EXIST.
 
 [EXACT LIBRARY DECLARATIONS]
 \`\`\`typescript
@@ -363,40 +398,54 @@ ${extensionSrc}
 \`\`\`
 
 RULES:
-1. **STRICT COMPLIANCE:** Use ONLY the functions defined above. 
-2. **LIGHT/NEOPIXEL USAGE:** - [CRITICAL] ONLY IF NeoPixels/Lights are needed, you MUST declare the strip variable at the top level:
+1. **STRICT COMPLIANCE & NAMESPACES:** - Use ONLY the functions defined above for the robot's specific features.
+   - [🚨 CRITICAL ENUM PREFIX] You MUST strictly prefix ALL custom enums with their namespace (e.g., \`aiPonybot.PingUnit.Centimeters\`).
+   - [🚨 NEOPIXEL EXCEPTION (CRITICAL)] Even though \`NeoPixelMode\` and \`NeoPixelColors\` might appear inside the \`neopixel\` or \`vibeLamp\` namespace in the declaration, MakeCode treats them as GLOBAL. You MUST NOT prefix them with \`neopixel.\` or \`vibeLamp.\`. 
+   * CORRECT: \`NeoPixelMode.RGB\`, \`NeoPixelColors.Red\`
+   * WRONG: \`neopixel.NeoPixelMode.RGB\`, \`neopixel.NeoPixelColors.Red\`
+2. **ALLOWANCE FOR BUILT-IN NAMESPACES:** You are FULLY AUTHORIZED to use standard BBC Micro:bit MakeCode built-in namespaces (\`basic\`, \`input\`, \`led\`, \`pins\`, \`radio\`, \`Math\`, \`control\`, \`bluetooth\`).
+3. **LIGHT/NEOPIXEL USAGE:** - [CRITICAL] ONLY IF NeoPixels/Lights are needed, you MUST declare and initialize the strip variable at the top level:
    ${initRule}
-   - Notice that \`NeoPixelMode\` and \`NeoPixelColors\` are GLOBAL enums.
+   - [🚨 CRITICAL] If you set the brightness, you MUST set it to 255 by default (e.g., \`strip.setBrightness(255)\`).
    ${colorRule}
-3. **BLOCK CONVERSION RULE (CRITICAL FOR MAKECODE):**
-   - MakeCode block editor fails to convert 'let' inside loops.
-   - You MUST declare variables globally at the top of the code.
-   - [🚨 CRITICAL WARNING] ONLY DECLARE VARIABLES THAT ARE ACTUALLY USED IN YOUR LOGIC. DO NOT DECLARE ANY UNUSED VARIABLES.
-   - Inside \`basic.forever\`, ONLY assign values.
-4. **STARTUP / TOP-LEVEL CODE:** - Do NOT use \`basic.onStart()\`. In MakeCode, code written at the top-level acts as the "on start" block.
+4. **BLOCK CONVERSION RULE (CRITICAL FOR MAKECODE):**
+   - [🚨 STRICT 'let' PLACEMENT] To prevent grey unparsed blocks, ALL \`let\` variable declarations MUST be grouped together at the ABSOLUTE TOP of the file, BEFORE any execution code or function calls (like \`vibeLamp.create\`, \`strip.setBrightness\`). NEVER mix \`let\` declarations with execution commands.
+   - [🚨 NO LOCAL 'let'] You are STRICTLY FORBIDDEN from using the \`let\` keyword inside ANY loop (\`basic.forever\`), event handler (\`bluetooth...\`), or \`if\` statement. ONLY reassign existing variables (e.g., \`distance = 10\`, NEVER \`let distance = 10\`).
+   - [🚨 MUST INITIALIZE] You MUST initialize variables with a value upon declaration (e.g., \`let x = 0;\`, \`let s = "";\`). NEVER write just \`let x;\`.
+   - [🚨 NO TYPE ANNOTATIONS & MUTATION] NEVER use explicit type annotations (e.g., \`: number\`). Use Type Inference (e.g., \`let dist = 0\`). MakeCode is statically typed, so NEVER change a variable's data type after initialization.
+5. **STARTUP / TOP-LEVEL CODE:** - Do NOT use \`basic.onStart()\`. In MakeCode, code written at the top-level acts as the "on start" block.
    - Place all initialization code directly at the top level of the file.
-5. **OUTPUT FORMAT:** - You MUST output a brief explanation of the code (1~2 sentences in Korean) FIRST.
+6. **OUTPUT FORMAT & EDUCATION:** - Output a friendly and encouraging explanation (2~3 sentences in Korean) FIRST. Briefly explain HOW the coding logic connects to the physical robot hardware.
    - THEN, output the actual code wrapped in a markdown code block (\`\`\`typescript ... \`\`\`).
-   - Do NOT mix explanation inside the code block.
-6. **OLED DISPLAY COLOR:** When using display functions ALWAYS set the color parameter to \`1\` (ON) so the text is visible.
-7. **LED MATRIX vs NEOPIXEL vs OLED:**
+7. **OLED DISPLAY COLOR:** When using display functions ALWAYS set the color parameter to \`1\` (ON) so the text is visible.
+8. **LED MATRIX vs NEOPIXEL vs OLED (INTELLIGENT UI/UX):**
    ${matrixRule}
-8. **EVENT HANDLERS:** - NEVER place event handlers (like \`input.onButtonPressed\`) inside loops. They MUST be declared independently at the top-level.
-9. **LOOP YIELDING:** - If you use a \`while\` loop, you MUST include \`basic.pause(20)\` inside the loop body to prevent freezing.
-10. **TYPE CONSISTENCY:** - MakeCode is statically typed. Never change a variable's data type after initialization.
-11. **[🚨 GUARDRAIL] PRIVACY PROTECTION:** If the user prompt contains ANY personal information (names, phone numbers, addresses, passwords), return EXACTLY this string and nothing else:
+   - [OLED - Intelligent Output] When displaying data on the OLED (128x64 resolution):
+     * Combine Text and Graphics: Use \`rectangle\`, \`horizontalLine\`, \`verticalLine\` intelligently alongside text (\`showString\`, \`showNumber\`) to make the output intuitive (e.g., bar graphs for sensor data).
+     * Full Canvas Utilization: Always consider the entire 128x64 canvas.
+9. **EVENT HANDLERS & PIN CONFLICTS:** - NEVER place event handlers (like \`input.onButtonPressed\`) inside loops.
+   - Never use the dedicated NeoPixel pin (DigitalPin.P8) for any other sensors or inputs.
+   - [🚨 CRITICAL] For Micro:bit V2 logo touch ("로고 터치", "로고 누름"), you MUST use \`input.onLogoEvent(TouchButtonEvent.Pressed, ...)\` INSTEAD OF \`input.onPinPressed(...)\`.
+10. **LOOP YIELDING & SCREEN OPTIMIZATION:** - If you use a \`while\` loop, you MUST include \`basic.pause(20)\` inside the loop body to prevent freezing.
+    - [🚨 OLED FLICKER PREVENTION (CRITICAL)] When animating on the OLED, NEVER use \`clear()\` inside the loop. Follow the "Partial Update" pattern:
+      1. Declare \`let oldX = 0; let oldY = 0;\` globally.
+      2. ERASE old object: draw same shape with \`color: 0\` at \`oldX\`, \`oldY\`.
+      3. DRAW new object: \`color: 1\` at \`x\`, \`y\`.
+      4. UPDATE: \`oldX = x; oldY = y;\`.
+${memoryRule}
+12. **MOTOR CONTROL SPECIFICATION (MECANUM vs NORMAL):**
+    - You MUST clearly distinguish between rotation and lateral/diagonal movement.
+    - Basic driving/rotation: \`aiPonybot.runNormal(...)\` with \`DirectionControl\`.
+    - Lateral/diagonal (게걸음, 수평이동): \`aiPonybot.runMecanum(...)\` with \`Mecanum\`.
+13. **[🚨 GUARDRAIL] PRIVACY PROTECTION:** If the prompt contains ANY personal information, return EXACTLY:
 // ⚠️ 바이브코딩 스튜디오는 개인정보를 수집하지 않으며, 관련 답변을 할 수 없어요
-12. **[🚨 GUARDRAIL] OFF-TOPIC PREVENTION:** If the user prompt is conversational chit-chat, jokes, or ANYTHING not directly related to programming the robot, return EXACTLY this string and nothing else:
+14. **[🚨 GUARDRAIL] OFF-TOPIC PREVENTION:** If the prompt is chit-chat, return EXACTLY:
 // ⚠️ 수업과 관련된 바이브코딩 프롬프트를 넣어주세요.
-
-13. **[🚨 CONTEXT AWARENESS]** The user's query may include existing code and a specific request to improve or fix it.
-    - If EXISTING CODE is provided and the user wants to IMPROVE or FIX it: Keep the core structure of the EXISTING CODE and apply the necessary changes.
-    - If the user explicitly asks to "start over", "erase", or "completely rewrite", IGNORE the EXISTING CODE and write fresh code.
+15. **[🚨 CONTEXT AWARENESS]** If EXISTING CODE is provided and the user wants to IMPROVE or FIX it: Keep the core structure and apply changes. If they ask to "start over", IGNORE existing code.
 `;
 
-                // ================== 모드별 사용자 쿼리 조립 ==================
                 let finalQuery = userQuery;
-                const codeIsEmpty = generatedCode.includes('여기에 AI가 생성한 코드') || generatedCode.includes('초기화됨');
+                const codeIsEmpty = generatedCode.trim() === '' || generatedCode.includes('여기에 AI가') || generatedCode.includes('초기화됨');
 
                 if (!codeIsEmpty && promptMode === 'improve') {
                     finalQuery = `[기존 코드]\n${generatedCode}\n\n[개선 및 추가 요청 사항]\n위 기존 코드의 뼈대를 유지하면서 다음 요청을 반영해줘: ${userQuery}`;
@@ -405,9 +454,8 @@ RULES:
                 }
 
                 try {
-                    const aiCodeRaw = await callGemini(finalQuery, systemPrompt);
+                    const aiCodeRaw = await callGemini(finalQuery, systemPrompt, currentImage);
 
-                    // 가드레일(개인정보, 잡담) 방어 처리
                     if (aiCodeRaw.includes('⚠️')) {
                         setGeneratedCode('// 지원하지 않는 프롬프트입니다.');
                         setMessages(prev => [...prev, { role: 'system', text: aiCodeRaw.replace(/\/\//g, '').trim() }]);
@@ -418,21 +466,17 @@ RULES:
                     let explanation = "";
                     let aiCode = "";
                     
-                    // 정규식을 사용한 문자열 파싱 시 Babel 에러 방지를 위해 문자열 동적 결합 사용
                     const marker = String.fromCharCode(96, 96, 96);
                     const codeRegex = new RegExp(marker + '(?:typescript|javascript|ts|js)?\\s*([\\s\\S]*?)' + marker, 'i');
                     const codeBlockMatch = aiCodeRaw.match(codeRegex);
                     
                     if (codeBlockMatch) {
                         aiCode = codeBlockMatch[1].trim();
-                        // 코드 블록을 제거한 나머지 텍스트를 설명으로 추출
                         explanation = aiCodeRaw.replace(codeRegex, '').trim();
                     } else {
-                        // 만약 AI가 마크다운 코드 블록을 빼먹었을 경우 (안전 장치)
                         aiCode = aiCodeRaw.replace(new RegExp(marker, 'g'), '').trim();
                     }
 
-                    // 설명 텍스트 최종 포맷팅
                     let finalExplanation = "";
                     if (!explanation) {
                         finalExplanation = "코드를 완벽하게 조립했습니다! 오른쪽 에디터에서 확인하고 복사하세요.";
@@ -504,7 +548,6 @@ RULES:
                             <div className="h-4 w-px bg-[#444] mx-1"></div>
                             <span className="text-white text-lg font-bold tracking-tight">바이브코딩 스튜디오</span>
                             
-                            {/* 제품 선택 탭 */}
                             <div className="ml-6 flex bg-[#222] p-1 rounded-lg">
                                 <button 
                                     onClick={() => setProduct('ponybot')}
@@ -535,7 +578,6 @@ RULES:
                             </a>
                         </div>
                         
-                        {/* API 설정 모달 */}
                         {showSettings && (
                             <div className="absolute top-16 right-6 p-5 bg-white rounded-2xl shadow-2xl border border-[#D1D5DB] z-[100] w-80 animate-fade-in text-[#111]">
                                 <div className="flex justify-between items-center mb-2">
@@ -574,6 +616,9 @@ RULES:
                                                 : 'bg-[#F1F3F4] text-[#111] rounded-tl-none border border-[#E5E7EB]'
                                         }`}>
                                             <div className="whitespace-pre-wrap">{msg.text}</div>
+                                            {msg.image && (
+                                                <img src={msg.image} alt="Uploaded" className="mt-3 max-w-full h-auto rounded-lg border border-white/20" />
+                                            )}
                                         </div>
                                     </div>
                                 ))}
@@ -590,7 +635,6 @@ RULES:
                             </div>
 
                             <div className="p-4 bg-white border-t border-[#D1D5DB]">
-                                {/* 작업 모드 드롭다운 */}
                                 <div className="mb-2 flex items-center">
                                     <select 
                                         value={promptMode} 
@@ -603,19 +647,34 @@ RULES:
                                     </select>
                                 </div>
                                 
-                                <div className="relative shadow-sm rounded-2xl">
+                                <div className="relative shadow-sm rounded-2xl bg-[#F8F9FA] border border-[#D1D5DB] focus-within:ring-1 focus-within:ring-black focus-within:border-black transition-all">
+                                    {pastedImage && (
+                                        <div className="p-3 pb-0">
+                                            <div className="relative inline-block">
+                                                <img src={pastedImage} alt="Preview" className="h-20 w-auto rounded-lg border border-[#D1D5DB] object-cover shadow-sm" />
+                                                <button 
+                                                    onClick={() => setPastedImage(null)} 
+                                                    className="absolute -top-2 -right-2 bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs hover:bg-[#EA4335] transition-colors shadow-md"
+                                                    title="이미지 삭제"
+                                                >
+                                                    <i className="fa-solid fa-xmark"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                     <textarea
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
                                         onKeyDown={handleKeyDown}
+                                        onPaste={handlePaste}
                                         placeholder={getPlaceholder()}
-                                        className="w-full bg-[#F8F9FA] text-[#111] p-4 pr-16 rounded-2xl border border-[#D1D5DB] focus:ring-1 focus:ring-black focus:border-black outline-none resize-none h-[100px] scrollbar-hide text-[0.9rem] transition-all placeholder:text-[#999]"
+                                        className="w-full bg-transparent text-[#111] p-4 pr-16 rounded-2xl outline-none resize-none h-[100px] scrollbar-hide text-[0.9rem] placeholder:text-[#999]"
                                     ></textarea>
                                     
-                                    <div className="absolute right-3 top-3 flex gap-2">
+                                    <div className="absolute right-3 bottom-3 flex gap-2">
                                         <button 
                                             onClick={generateCode}
-                                            disabled={isLoading}
+                                            disabled={isLoading || (!input.trim() && !pastedImage)}
                                             title="전송하기"
                                             className="w-9 h-9 flex items-center justify-center bg-black text-white rounded-full hover:bg-[#333] disabled:opacity-50 transition-colors shadow-md"
                                         >
@@ -649,8 +708,8 @@ RULES:
                                     <div className="h-4 w-px bg-[#DDD] mx-1"></div>
                                     <button 
                                         onClick={() => {
-                                            setGeneratedCode("// 초기화됨");
-                                            setMessages([{ role: 'assistant', text: '코드가 초기화되었습니다. 새로운 코드를 작성해보세요!' }]);
+                                            setGeneratedCode("// 초기화됨\n// 여기에 직접 코드를 붙여넣고 개선할 수도 있습니다.");
+                                            setMessages([{ role: 'assistant', text: '코드가 초기화되었습니다. 새로운 코드를 작성하거나 기존 코드를 붙여넣어 보세요!' }]);
                                             setPromptMode('new');
                                             setShowExplanation(false);
                                         }}
@@ -714,7 +773,7 @@ RULES:
                     <footer className="bg-black text-white px-8 py-5 border-t border-[#222] shrink-0 text-xs flex justify-between items-center z-50">
                         <div className="flex flex-col gap-1.5">
                             <strong className="text-sm font-bold tracking-tight">바운더리엑스 (Boundary X)</strong>
-                            <span className="text-[#999] font-normal">"미래 기술을 교실의 책상 위로"</span>
+                            <span className="text-[#999] font-normal">"미래 기술을 교실의 책상 위로 옮기는 에듀테크 기업"</span>
                         </div>
                         <div className="flex items-center gap-8">
                              <div className="flex items-center gap-2 bg-[#1a1a1a] px-3 py-1.5 rounded-full border border-[#333]">
@@ -722,7 +781,7 @@ RULES:
                                 <span className="text-[#ccc]">사용법: 생성된 코드를 <b>MakeCode JavaScript 탭</b>에 붙여넣으세요.</span>
                             </div>
                             <div className="text-[#666] font-medium">
-                                © 2024 Boundary X Co. All rights reserved.
+                                © 2026 Boundary X Co. All rights reserved.
                             </div>
                         </div>
                     </footer>
